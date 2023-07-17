@@ -1,7 +1,7 @@
 const express = require ('express');
 const cors = require ('cors');
 require('dotenv').config();
-const { MongoClient, ServerApiVersion } = require('mongodb');
+const { MongoClient, ServerApiVersion, ObjectId } = require('mongodb');
 const app = express();
 const port = process.env.PORT || 5000;
 
@@ -17,6 +17,7 @@ console.log(process.env.DB_PASS)
 
 const uri = `mongodb+srv://${process.env.DB_USER}:${process.env.DB_PASS}@cluster0.xu7sm0d.mongodb.net/?retryWrites=true&w=majority`;
 console.log(uri);
+
 /* const uri = "mongodb+srv://coffeeMaster:2kyvBw6DDxaiLx43@cluster0.xu7sm0d.mongodb.net/?retryWrites=true&w=majority"; */
 
 // Create a MongoClient with a MongoClientOptions object to set the Stable API version
@@ -33,14 +34,21 @@ async function run() {
     // Connect the client to the server	(optional starting in v4.7)
     await client.connect();
 
-    const coffeeCollection = client.db('coffeeDB').collection('coffee')
+    const coffeeCollection = client.db('coffeeDB').collection('coffee');
 
-    //app.get('/coffee', async(req, res) => {
-      //const cursor = coffeeCollection.find();
-      //const result = await cursor.toArray();
-      //res.send(result);
-      
-    //})
+    app.get('/coffee', async(req, res) => {
+      const cursor = coffeeCollection.find();
+      const result = await cursor.toArray();
+      res.send(result);
+    })
+
+    app.get('/coffee/:id', async(req, res) =>{
+      const id = req.params.id;
+      const query = {_id: new ObjectId(id)}
+      const result = await coffeeCollection.findOne(query);
+      res.send(result);
+
+    })
 
     app.post('/coffee', async(req, res)=>{
       const newCoffee = req.body;
@@ -48,6 +56,18 @@ async function run() {
       const result = await coffeeCollection.insertOne(newCoffee);
       res.send(result);
     })
+
+    app.delete('/coffee/:id', async(req, res) =>{
+      const id = req.params.id;
+      const query = {_id: new ObjectId(id)}
+      const result = await coffeeCollection.deleteOne(query);
+      res.send(result);
+
+
+
+    })
+
+
 
     // Send a ping to confirm a successful connection
     await client.db("admin").command({ ping: 1 });
